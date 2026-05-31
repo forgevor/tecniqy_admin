@@ -1,0 +1,165 @@
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+/* ============================================================
+   Tecniqy Admin · Design tokens
+   ============================================================
+
+   Capas:
+   1. @theme  → tokens consumidos por Tailwind v4 + Nuxt UI v4.
+                Las clases `bg-tecniqy-600`, `text-text-main`, etc.
+                se generan a partir de acá. Nuxt UI usa la paleta
+                `tecniqy-*` como su color "primary" (ver app.config.ts).
+
+   2. :root   → aliases sin prefijo `--color-*` para el CSS scoped
+                legacy del prototype (login.vue, metrics.vue,
+                subscriptions.vue) que usa `var(--primary)`,
+                `var(--surface)`, `var(--radius-sm)`, etc.
+                Apuntan a los mismos valores que @theme, así no hay
+                divergencia. Cuando migremos esas pages a Tq*,
+                podemos retirar :root.
+   ============================================================ */
+
+@theme {
+  /* Surfaces */
+  --color-bg: #f4f6f9;
+  --color-surface: #ffffff;
+  --color-surface-2: #f1f4f8;
+  --color-surface-3: #e9eef5;
+  --color-border: #e4eaf1;
+  --color-border-strong: #d2dae4;
+  --color-border-soft: #eef2f7;
+
+  /* Brand · steel blue (consumida por Nuxt UI como primary) */
+  --color-tecniqy-50:  #eff6ff;
+  --color-tecniqy-100: #dbeafe;
+  --color-tecniqy-200: #bfdbfe;
+  --color-tecniqy-300: #93c5fd;
+  --color-tecniqy-400: #60a5fa;
+  --color-tecniqy-500: #3b82f6;
+  --color-tecniqy-600: #2a5fae; /* Tecniqy Blue */
+  --color-tecniqy-700: #234e90;
+  --color-tecniqy-800: #1d4178;
+  --color-tecniqy-900: #1a3d76;
+  --color-tecniqy-950: #142d56;
+
+  /* Soft brand tints (cards, hover states, badges) */
+  --color-brand-soft: #e8eff9;
+  --color-brand-soft-2: #d5e1f2;
+
+  /* Text */
+  --color-text-main: #0e1726;
+  --color-text-2: #2a3447;
+  --color-text-muted: #5b6878;
+  --color-text-subtle: #8993a3;
+
+  /* Status (job + subscription states) */
+  --color-status-done: #166534;
+  --color-status-done-bg: #dcfce7;
+  --color-status-progress: #1d4ed8;
+  --color-status-progress-bg: #dbe6ff;
+  --color-status-pending: #b45309;
+  --color-status-pending-bg: #fef3c7;
+  --color-status-cancel: #b91c1c;
+  --color-status-cancel-bg: #fee2e2;
+
+  /* Radius escala (alineada al prototype) */
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 22px;
+
+  /* Shadows */
+  --shadow-tq-1: 0 1px 2px rgba(15, 24, 38, 0.04), 0 1px 1px rgba(15, 24, 38, 0.03);
+  --shadow-tq-2: 0 2px 6px rgba(15, 24, 38, 0.06), 0 1px 2px rgba(15, 24, 38, 0.04);
+  --shadow-tq-3: 0 12px 32px rgba(15, 24, 38, 0.12), 0 4px 8px rgba(15, 24, 38, 0.06);
+
+  /* Fonts */
+  --font-sans: "Geist", "Inter", -apple-system, "Segoe UI", system-ui, sans-serif;
+  --font-mono: "Geist Mono", "JetBrains Mono", ui-monospace, "SF Mono", monospace;
+}
+
+/* Aliases sin prefijo para CSS legacy del prototype.
+   No tocar valores acá: editar arriba en @theme. */
+:root {
+  /* Surfaces */
+  --bg:             var(--color-bg);
+  --background:     var(--color-bg);
+  --surface:        var(--color-surface);
+  --surface-2:      var(--color-surface-2);
+  --surface-3:      var(--color-surface-3);
+  --border:         var(--color-border);
+  --border-strong:  var(--color-border-strong);
+  --border-soft:    var(--color-border-soft);
+
+  /* Brand */
+  --primary:        var(--color-tecniqy-600);
+  --primary-hover:  var(--color-tecniqy-700);
+  --primary-active: var(--color-tecniqy-800);
+  --primary-soft:   var(--color-brand-soft);
+  --primary-soft-2: var(--color-brand-soft-2);
+  --on-primary:     #ffffff;
+
+  /* Text */
+  --text:           var(--color-text-main);
+  --text-2:         var(--color-text-2);
+  --text-muted:     var(--color-text-muted);
+  --text-subtle:    var(--color-text-subtle);
+  --text-inverse:   #ffffff;
+
+  /* Status */
+  --status-done:        var(--color-status-done);
+  --status-done-bg:     var(--color-status-done-bg);
+  --status-progress:    var(--color-status-progress);
+  --status-progress-bg: var(--color-status-progress-bg);
+  --status-pending:     var(--color-status-pending);
+  --status-pending-bg:  var(--color-status-pending-bg);
+  --status-cancel:      var(--color-status-cancel);
+  --status-cancel-bg:   var(--color-status-cancel-bg);
+
+  /* Semantic */
+  --success: #15803d;
+  --warning: #c2410c;
+  --danger:  #dc2626;
+  --info:    #0e7490;
+
+  /* Radius */
+  --r-xs: var(--radius-xs);
+  --r-sm: var(--radius-sm);
+  --r-md: var(--radius-md);
+  --r-lg: var(--radius-lg);
+  --r-xl: var(--radius-xl);
+
+  /* Shadows */
+  --shadow-1: var(--shadow-tq-1);
+  --shadow-2: var(--shadow-tq-2);
+  --shadow-3: var(--shadow-tq-3);
+
+  /* Fonts */
+  --font-sans: "Geist", "Inter", -apple-system, "Segoe UI", system-ui, sans-serif;
+  --font-mono: "Geist Mono", "JetBrains Mono", ui-monospace, "SF Mono", monospace;
+}
+
+@layer base {
+  body {
+    @apply antialiased bg-bg text-text-main font-sans;
+    font-feature-settings: "cv11", "ss01", "ss03";
+    letter-spacing: -0.005em;
+  }
+}
+
+/* Utilities globales (replican las del prototype) */
+.tnum { font-variant-numeric: tabular-nums; }
+.mono {
+  font-family: var(--color-mono, var(--font-mono));
+  font-feature-settings: "tnum";
+  letter-spacing: -0.02em;
+}
+
+/* Card base (usado por pages legacy, será reemplazado por TqCard) */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+}
