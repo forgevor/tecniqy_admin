@@ -106,16 +106,15 @@ const { overview, fmt } = useAdminMetrics()
 const route = useRoute()
 const searchQuery = ref('')
 
-// Badges del sidebar — todos derivados de /admin/metrics/overview.
-// El support badge queda en null hasta que tengamos sistema de tickets
-// (Resend o lo que sea, no es prioridad pre-deploy).
+// Badges del sidebar — derivados de /admin/metrics/overview.
+// /support quitado del sidebar hasta que tengamos sistema de tickets
+// (no es prioridad pre-deploy ni post; vendría con Resend o similar).
 const navItems = computed(() => [
   { id: 'dashboard',     label: 'Dashboard',     to: '/',              icon: 'i-heroicons-home' },
   { id: 'users',         label: 'Usuarios',      to: '/users',         icon: 'i-heroicons-users',         badge: fmt(overview.value?.totalTechnicians) },
   { id: 'subscriptions', label: 'Suscripciones', to: '/subscriptions', icon: 'i-heroicons-shield-check', badge: fmt(overview.value?.activeTechnicians) },
   { id: 'metrics',       label: 'Métricas',      to: '/metrics',       icon: 'i-heroicons-chart-bar' },
-  { id: 'activity',      label: 'Actividad',     to: '/activity',      icon: 'i-heroicons-bolt' },
-  { id: 'support',       label: 'Soporte',       to: '/support',       icon: 'i-heroicons-bell' }
+  { id: 'activity',      label: 'Actividad',     to: '/activity',      icon: 'i-heroicons-bolt' }
 ])
 
 // Subtitles dinámicos derivados del overview real.
@@ -137,8 +136,6 @@ const currentPage = computed(() => {
       return { title: 'Métricas', sub: 'Crecimiento, retención y distribución' }
     case 'activity':
       return { title: 'Actividad', sub: 'Bitácora de eventos del sistema' }
-    case 'support':
-      return { title: 'Soporte', sub: 'Tickets y consultas de técnicos' }
     default:
       return { title: 'Tecniqy Admin', sub: '' }
   }
