@@ -54,7 +54,7 @@ defineEmits<{ click: [event: MouseEvent] }>()
 
 const VARIANT_CLASSES: Record<Variant, string> = {
   primary:
-    'bg-tecniqy-600 text-white border-transparent hover:bg-tecniqy-700 active:bg-tecniqy-800',
+    'bg-tecniqy-500 text-white border-transparent hover:bg-tecniqy-600 active:bg-tecniqy-700',
   secondary:
     'bg-surface text-text-main border-border-strong hover:bg-surface-2',
   ghost:
@@ -72,7 +72,7 @@ const SIZE_CLASSES: Record<Size, string> = {
 const classes = computed(() => [
   'tq-btn inline-flex items-center justify-center font-semibold rounded-[8px] border',
   'transition-colors duration-150 cursor-pointer select-none outline-none',
-  'focus-visible:ring-2 focus-visible:ring-tecniqy-600/30',
+  'focus-visible:ring-2 focus-visible:ring-tecniqy-500/30',
   'disabled:opacity-50 disabled:cursor-not-allowed',
   'active:translate-y-[0.5px]',
   VARIANT_CLASSES[props.variant],

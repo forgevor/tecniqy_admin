@@ -20,7 +20,12 @@
                 podemos retirar :root.
    ============================================================ */
 
-@theme {
+/* @theme static — Tailwind v4 emite las CSS custom properties al output
+   final aunque las clases no se usen de forma literal en el código.
+   Crítico para Nuxt UI v4: el runtime de tv() (tailwind-variants) compone
+   classes como `bg-tecniqy-600` dinámicamente; sin `static` esas vars
+   pueden no existir en runtime y los botones quedan sin background. */
+@theme static {
   /* Surfaces */
   --color-bg: #f4f6f9;
   --color-surface: #ffffff;
@@ -30,18 +35,23 @@
   --color-border-strong: #d2dae4;
   --color-border-soft: #eef2f7;
 
-  /* Brand · steel blue (consumida por Nuxt UI como primary) */
-  --color-tecniqy-50:  #eff6ff;
-  --color-tecniqy-100: #dbeafe;
-  --color-tecniqy-200: #bfdbfe;
-  --color-tecniqy-300: #93c5fd;
-  --color-tecniqy-400: #60a5fa;
-  --color-tecniqy-500: #3b82f6;
-  --color-tecniqy-600: #2a5fae; /* Tecniqy Blue */
-  --color-tecniqy-700: #234e90;
-  --color-tecniqy-800: #1d4178;
-  --color-tecniqy-900: #1a3d76;
-  --color-tecniqy-950: #142d56;
+  /* Brand · steel blue (consumida por Nuxt UI como primary).
+     #2a5fae va en -500 (centro de la paleta) porque Nuxt UI usa por
+     convención -500 como el "color base" del active state de muchos
+     componentes (UPagination solid, UBadge solid, etc.). El resto está
+     derivado desde el brand: 50-400 progressivamente más claros,
+     600-950 progressivamente más oscuros para hover/active states. */
+  --color-tecniqy-50:  #eef3fb;
+  --color-tecniqy-100: #d5e1f2;
+  --color-tecniqy-200: #aac3e5;
+  --color-tecniqy-300: #7fa5d8;
+  --color-tecniqy-400: #5487cb;
+  --color-tecniqy-500: #2a5fae; /* Tecniqy Blue — brand base */
+  --color-tecniqy-600: #234e90;
+  --color-tecniqy-700: #1d4178;
+  --color-tecniqy-800: #18375f;
+  --color-tecniqy-900: #122c4a;
+  --color-tecniqy-950: #0d1f33;
 
   /* Soft brand tints (cards, hover states, badges) */
   --color-brand-soft: #e8eff9;
