@@ -72,7 +72,9 @@
               <td class="tnum success font-bold">{{ user.mrr ? `$${user.mrr}` : '—' }}</td>
               <td class="text-muted">{{ user.joined }}</td>
               <td class="text-right">
-                <button class="icon-btn sm">···</button>
+                <button class="icon-btn sm">
+                  <TqIcon name="More" size="14" />
+                </button>
               </td>
             </tr>
           </tbody>

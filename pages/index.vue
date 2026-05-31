@@ -5,7 +5,7 @@
         <div class="metric-label">Total técnicos</div>
         <div class="metric-value tnum">3,247</div>
         <div class="metric-delta positive">
-          <span>⬆️</span> +182 este mes
+          <TqIcon name="Trend" size="14" /> +182 este mes
         </div>
       </div>
       
@@ -18,14 +18,16 @@
       <div class="card metric-card">
         <div class="metric-label">MRR</div>
         <div class="metric-value tnum"> $864K </div>
-        <div class="metric-delta positive">MXN · +12.4%</div>
+        <div class="metric-delta positive">
+          <TqIcon name="Trend" size="14" /> MXN · +12.4%
+        </div>
       </div>
 
       <div class="card metric-card">
         <div class="metric-label">Cuentas vencidas</div>
         <div class="metric-value tnum warning">124</div>
         <div class="metric-delta negative">
-          <span>⬇️</span> −18 vs sem. ant.
+          <TqIcon name="Trend" size="14" style="transform: scaleY(-1)" /> −18 vs sem. ant.
         </div>
       </div>
     </div>

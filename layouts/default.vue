@@ -3,46 +3,48 @@
     <aside class="sidebar">
       <div class="sidebar-header">
         <div class="logo">
-          <!-- TODO: Add SVG Logo from prototype -->
-          <div class="logo-icon">TQ</div>
+          <TqLogo size="32" style="color: var(--primary)" />
           <span class="logo-text">Tecniqy</span>
         </div>
       </div>
       
       <nav class="sidebar-nav">
         <NuxtLink to="/" class="nav-item" active-class="active">
-          <span class="nav-icon">📊</span>
+          <TqIcon name="Home" class="nav-icon" />
           <span class="nav-label">Dashboard</span>
         </NuxtLink>
         <NuxtLink to="/users" class="nav-item" active-class="active">
-          <span class="nav-icon">👥</span>
+          <TqIcon name="Users" class="nav-icon" />
           <span class="nav-label">Usuarios</span>
         </NuxtLink>
         <NuxtLink to="/subscriptions" class="nav-item" active-class="active">
-          <span class="nav-icon">💳</span>
+          <TqIcon name="Dollar" class="nav-icon" />
           <span class="nav-label">Suscripciones</span>
         </NuxtLink>
         <NuxtLink to="/metrics" class="nav-item" active-class="active">
-          <span class="nav-icon">📈</span>
+          <TqIcon name="Trend" class="nav-icon" />
           <span class="nav-label">Métricas</span>
         </NuxtLink>
         <NuxtLink to="/activity" class="nav-item" active-class="active">
-          <span class="nav-icon">⚡</span>
+          <TqIcon name="Lightning" class="nav-icon" />
           <span class="nav-label">Actividad</span>
         </NuxtLink>
         <NuxtLink to="/support" class="nav-item" active-class="active">
-          <span class="nav-icon">🎧</span>
+          <TqIcon name="Note" class="nav-icon" />
           <span class="nav-label">Soporte</span>
         </NuxtLink>
       </nav>
 
       <div class="sidebar-footer">
         <div class="user-profile">
-          <div class="avatar sm steel">AD</div>
+          <div class="avatar sm steel">{{ userInitials }}</div>
           <div class="user-info">
-            <div class="user-name">Admin User</div>
-            <div class="user-role">Forgevor Admin</div>
+            <div class="user-name">{{ user?.name || 'Usuario' }}</div>
+            <div class="user-role">{{ user?.role === 'technician' ? 'Técnico' : 'Admin' }}</div>
           </div>
+          <button @click="logout" class="logout-btn" title="Cerrar sesión">
+            <TqIcon name="Power" size="16" />
+          </button>
         </div>
       </div>
     </aside>
@@ -53,8 +55,12 @@
           <h1>{{ pageTitle }}</h1>
         </div>
         <div class="top-bar-actions">
-          <button class="icon-btn">🔔</button>
-          <button class="icon-btn">🔍</button>
+          <button class="icon-btn">
+            <TqIcon name="Bell" size="18" />
+          </button>
+          <button class="icon-btn">
+            <TqIcon name="Search" size="18" />
+          </button>
         </div>
       </header>
       
@@ -66,7 +72,19 @@
 </template>
 
 <script setup lang="ts">
+const { user, logout } = useAuth()
 const route = useRoute()
+
+const userInitials = computed(() => {
+  if (!user.value?.name) return 'AD'
+  return user.value.name
+    .split(' ')
+    .map((n: string) => n[0])
+    .join('')
+    .toUpperCase()
+    .substring(0, 2)
+})
+
 const pageTitle = computed(() => {
   const titles: Record<string, string> = {
     'index': 'Dashboard Overview',
@@ -105,19 +123,6 @@ const pageTitle = computed(() => {
   display: flex;
   align-items: center;
   gap: 12px;
-}
-
-.logo-icon {
-  width: 32px;
-  height: 32px;
-  background: var(--primary);
-  color: white;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 800;
-  font-size: 14px;
 }
 
 .logo-text {
@@ -170,16 +175,39 @@ const pageTitle = computed(() => {
 .user-info {
   display: flex;
   flex-direction: column;
+  flex: 1;
 }
 
 .user-name {
   font-size: 13px;
   font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
 }
 
 .user-role {
   font-size: 11px;
   color: var(--text-muted);
+}
+
+.logout-btn {
+  background: none;
+  border: none;
+  color: var(--text-subtle);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.logout-btn:hover {
+  background: var(--status-cancel-bg);
+  color: var(--status-cancel);
 }
 
 .main-content {

@@ -50,7 +50,7 @@
         <div class="card-body">
           <div v-for="c in countries" :key="c.name" class="dist-row">
             <div class="dist-label">
-              <span class="flag">{{ c.flag }}</span>
+              <span class="flag-box">{{ c.flag }}</span>
               <span class="name">{{ c.name }}</span>
             </div>
             <div class="dist-progress">
@@ -72,7 +72,9 @@
         </div>
         <div class="card-body">
           <div v-for="s in services" :key="s.label" class="service-row">
-            <div class="service-icon">{{ s.icon }}</div>
+            <div class="service-icon">
+              <TqIcon :name="s.iconName" size="16" />
+            </div>
             <div class="service-info">
               <div class="service-label">{{ s.label }}</div>
               <div class="service-count tnum text-muted">{{ s.count }} · {{ s.percent }}%</div>
@@ -86,17 +88,17 @@
 
 <script setup lang="ts">
 const countries = [
-  { name: 'México', flag: '🇲🇽', percent: 62.0 },
-  { name: 'Colombia', flag: '🇨🇴', percent: 12.7 },
-  { name: 'Perú', flag: '🇵🇪', percent: 8.8 },
-  { name: 'Argentina', flag: '🇦🇷', percent: 6.1 },
+  { name: 'México', flag: 'MX', percent: 62.0 },
+  { name: 'Colombia', flag: 'CO', percent: 12.7 },
+  { name: 'Perú', flag: 'PE', percent: 8.8 },
+  { name: 'Argentina', flag: 'AR', percent: 6.1 },
 ]
 
 const services = [
-  { label: 'Aire acondicionado', icon: '❄️', count: 1148, percent: 35.4 },
-  { label: 'Plomería', icon: '💧', count: 681, percent: 21.0 },
-  { label: 'Electricidad', icon: '⚡', count: 552, percent: 17.0 },
-  { label: 'Refrigeración', icon: '🍦', count: 422, percent: 13.0 },
+  { label: 'Aire acondicionado', iconName: 'Snow', count: 1148, percent: 35.4 },
+  { label: 'Plomería', iconName: 'Drop', count: 681, percent: 21.0 },
+  { label: 'Electricidad', iconName: 'Bolt', count: 552, percent: 17.0 },
+  { label: 'Refrigeración', iconName: 'Snow', count: 422, percent: 13.0 },
 ]
 </script>
 
@@ -186,6 +188,18 @@ const services = [
   font-weight: 600;
 }
 
+.flag-box {
+  width: 28px;
+  font-size: 10px;
+  font-weight: 700;
+  background: var(--surface-2);
+  padding: 2px 4px;
+  border-radius: 3px;
+  text-align: center;
+  color: var(--text-2);
+  font-family: var(--font-mono);
+}
+
 .dist-progress {
   display: flex;
   align-items: center;
@@ -222,10 +236,10 @@ const services = [
   height: 30px;
   border-radius: 8px;
   background: var(--primary-soft);
+  color: var(--primary);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
 }
 
 .service-info {
