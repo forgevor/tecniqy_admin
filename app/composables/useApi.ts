@@ -7,17 +7,20 @@
  *      - Si ya estamos refresheando (otro request paralelo), espera al
  *        mismo promise compartido (evita N refreshes en simultáneo).
  *      - Sino: dispara POST /auth/refresh con el refresh cookie.
- *        - Si refresh OK: actualiza tokens via useAuth.setSession() y
- *          reintenta el request original UNA VEZ con el nuevo token.
- *        - Si refresh falla: logout silencioso (clearSession + redirect).
+ *        - Si refresh OK: window.location.reload() — recarga la página
+ *          entera para que toda la data se refetchee con tokens nuevos.
+ *          Más confiable que reintentar in-place porque varias pages
+ *          ya rindieron el error en la UI antes de que el retry
+ *          resolviera (useAsyncData transitioned to error state).
+ *        - Si refresh falla: logout (clearSession + redirect a /login).
  *   3. Anti-loop: si el request original ES `/auth/refresh`, NO entra
  *      al ciclo (sino bucle infinito).
  *
  * El refresh promise es compartido a nivel module (singleton entre
  * todas las instancias de useApi), no a nivel composable. Esto es
  * crítico: si la dashboard llama 4 endpoints en paralelo y todos
- * devuelven 401, hacemos 1 refresh y reintentamos los 4 — no 4
- * refreshes que rotarían el token y se invalidarían entre sí.
+ * devuelven 401, hacemos 1 refresh y reload — no 4 refreshes que
+ * rotarían el token y se invalidarían entre sí.
  */
 
 let refreshPromise: Promise<boolean> | null = null
@@ -98,12 +101,19 @@ export const useApi = () => {
         throw error
       }
 
-      // Refresh OK → reintentar el request original con el nuevo token.
-      // Solo UNA VEZ — si vuelve a dar 401, propagamos el error sin loop.
-      return await $fetch(`${config.public.apiBase}${url}`, {
-        ...options,
-        headers: buildHeaders()
-      })
+      // Refresh OK → reload de la página entera. Los tokens nuevos ya
+      // viven en cookies (setSession los persistió), así que al volver
+      // a montar todos los useAsyncData arrancan con auth válida y la
+      // UI se rehidrata limpia. Devolvemos una promise que nunca
+      // resuelve para que el caller actual no siga ejecutando — el
+      // reload tira el documento de todos modos.
+      if (import.meta.client) {
+        window.location.reload()
+        return new Promise(() => {})
+      }
+      // SSR (poco probable acá, pero por las dudas): no podemos
+      // recargar, propagamos para que el render error lo capture.
+      throw error
     }
   }
 
