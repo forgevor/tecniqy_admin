@@ -38,15 +38,16 @@
         </NuxtLink>
       </nav>
 
-      <!-- Footer user -->
+      <!-- Footer user. Con ssr:false en nuxt.config el ClientOnly que
+           había aquí ya no es necesario — el render es siempre cliente. -->
       <div class="mt-auto p-[10px] flex items-center gap-[10px]">
-        <TqAvatar :name="user?.fullName || 'Admin User'" tone="dark" size="md" />
+        <TqAvatar :name="user?.fullName || 'Admin'" tone="dark" size="md" />
         <div class="flex-1 min-w-0">
           <p class="text-[12px] font-bold text-text-main truncate leading-tight">
-            {{ user?.fullName || 'Forgevor Admin' }}
+            {{ user?.fullName || '—' }}
           </p>
           <p class="text-[10px] text-text-muted truncate mt-0.5">
-            {{ user?.email || 'admin@forgevor.com' }}
+            {{ user?.email || '—' }}
           </p>
         </div>
         <TqButton

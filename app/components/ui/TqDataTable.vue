@@ -239,6 +239,27 @@ const tableUi = {
 .tq-table__body { flex: 1; min-height: 0; }
 .tq-table__scroll { width: 100%; overflow-x: auto; }
 
+/* Nuxt UI v4 cambió la estructura del slot `ui` de UTable: nuestras
+   classes `tableUi` no siempre aplican bien (queda auto-sized → tabla
+   visualmente "corrida a la derecha" dentro del card). Forzamos width
+   desde afuera con !important para garantizar que el child del scroll
+   wrapper SIEMPRE tome todo el ancho disponible. */
+.tq-table__scroll :deep(table) {
+  width: 100% !important;
+  table-layout: auto;
+  border-collapse: collapse;
+}
+.tq-table__scroll :deep([data-slot="root"]),
+.tq-table__scroll :deep([data-slot="base"]) {
+  width: 100%;
+}
+
+/* Placeholder durante hidratación del ClientOnly del UTable */
+.tq-table__hydrating {
+  min-height: 200px;
+  background: var(--surface);
+}
+
 /* First-load placeholder (reemplaza al loading bar de UTable) */
 .tq-table__first-load {
   display: flex; align-items: center; justify-content: center;
