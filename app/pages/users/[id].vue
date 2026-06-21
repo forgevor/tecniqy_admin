@@ -176,7 +176,12 @@
           />
         </div>
         <ol v-else class="timeline">
-          <li v-for="(e, i) in subEvents" :key="e.id" class="timeline__item">
+          <li
+            v-for="(e, i) in subEvents"
+            :key="e.id"
+            class="timeline__item"
+            :style="{ '--stagger': `${Math.min(i, 8) * 35}ms` }"
+          >
             <div class="timeline__marker" :class="`timeline__marker--${eventTone(e.eventType)}`">
               <UIcon :name="eventIcon(e.eventType)" />
             </div>
@@ -866,6 +871,16 @@ function formatDateTime(value: string | null | undefined): string {
   position: relative;
   display: flex; align-items: flex-start; gap: 14px;
   padding: 10px 0;
+  /* Stagger en aparición: 0/35/70/.../280ms después del :nth (capped en 8). */
+  animation: tl-fade-in .35s ease-out both;
+  animation-delay: var(--stagger, 0ms);
+}
+@keyframes tl-fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .timeline__item { animation: none; }
 }
 .timeline__marker {
   flex-shrink: 0;

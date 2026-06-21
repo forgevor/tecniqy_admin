@@ -1,13 +1,19 @@
 <template>
   <div class="tq-metric-card">
     <div class="tq-metric-card__label">{{ label }}</div>
-    <div class="tq-metric-card__value tnum">
-      <span v-if="prefix" class="tq-metric-card__prefix">{{ prefix }}</span>{{ formattedValue }}<span v-if="suffix" class="tq-metric-card__suffix">{{ suffix }}</span>
-    </div>
-    <div v-if="delta || $slots.delta" class="tq-metric-card__delta" :class="deltaClass">
-      <UIcon v-if="trend" :name="trendIcon" class="tq-metric-card__trend-icon" />
-      <slot name="delta">{{ delta }}</slot>
-    </div>
+    <template v-if="loading">
+      <div class="tq-metric-card__skeleton tq-metric-card__skeleton--value" />
+      <div v-if="delta || $slots.delta" class="tq-metric-card__skeleton tq-metric-card__skeleton--delta" />
+    </template>
+    <template v-else>
+      <div class="tq-metric-card__value tnum">
+        <span v-if="prefix" class="tq-metric-card__prefix">{{ prefix }}</span>{{ formattedValue }}<span v-if="suffix" class="tq-metric-card__suffix">{{ suffix }}</span>
+      </div>
+      <div v-if="delta || $slots.delta" class="tq-metric-card__delta" :class="deltaClass">
+        <UIcon v-if="trend" :name="trendIcon" class="tq-metric-card__trend-icon" />
+        <slot name="delta">{{ delta }}</slot>
+      </div>
+    </template>
   </div>
 </template>
 
@@ -40,7 +46,6 @@ const props = withDefaults(defineProps<{
 })
 
 const formattedValue = computed(() => {
-  if (props.loading) return '—'
   if (props.value === null || props.value === undefined) return '—'
   if (typeof props.value === 'number') return props.value.toLocaleString('es-MX')
   return props.value
@@ -88,6 +93,34 @@ const deltaClass = computed(() => ({
 .tq-metric-card__suffix {
   font-size: 14px; font-weight: 600; color: var(--text-muted);
   margin-left: 4px;
+}
+
+/* Skeleton mientras loading. Mantiene la altura del card estable
+   para evitar layout shift cuando llegan los datos. */
+.tq-metric-card__skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--surface-2) 0%,
+    color-mix(in srgb, var(--surface-2) 40%, var(--surface)) 50%,
+    var(--surface-2) 100%
+  );
+  background-size: 200% 100%;
+  border-radius: 6px;
+  animation: tq-shimmer 1.4s ease-in-out infinite;
+}
+.tq-metric-card__skeleton--value {
+  height: 32px;
+  width: 60%;
+  margin-top: 4px;
+}
+.tq-metric-card__skeleton--delta {
+  height: 12px;
+  width: 40%;
+  margin-top: 6px;
+}
+@keyframes tq-shimmer {
+  0%   { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
 }
 .tq-metric-card__delta {
   display: flex; align-items: center; gap: 4px;

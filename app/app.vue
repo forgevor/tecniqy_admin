@@ -1,7 +1,11 @@
 <template>
   <UApp>
     <NuxtLayout>
-      <NuxtPage />
+      <NuxtPage :transition="{
+        name: 'page-fade',
+        mode: 'out-in',
+        appear: true
+      }" />
     </NuxtLayout>
   </UApp>
 </template>

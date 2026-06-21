@@ -173,3 +173,30 @@
   border: 1px solid var(--border);
   border-radius: var(--r-md);
 }
+
+/* ── Page transitions ─────────────────────────────────────────────── */
+/* Aplicado a <NuxtPage> en app.vue. Fade + leve slide-up al entrar,
+   fade puro al salir. Curva easeOutCubic + duraciones cortas para que
+   se sienta snappy, no demoroso. `prefers-reduced-motion` lo apaga. */
+.page-fade-enter-active {
+  transition: opacity .22s ease-out, transform .28s cubic-bezier(.22,.61,.36,1);
+}
+.page-fade-leave-active {
+  transition: opacity .12s ease-in;
+}
+.page-fade-enter-from {
+  opacity: 0;
+  transform: translateY(6px);
+}
+.page-fade-leave-to {
+  opacity: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .page-fade-enter-active,
+  .page-fade-leave-active {
+    transition: none;
+  }
+  .page-fade-enter-from {
+    transform: none;
+  }
+}
