@@ -226,10 +226,15 @@ function formatDate(value: string | null | undefined) {
   }).replace('.', '')
 }
 
+const toast = useToast()
+const { refresh: refreshGlobalMetrics } = useAdminMetrics()
+const pendingActionId = ref<string | null>(null)
+
 function actionItems(row: any) {
   // No exponemos promote/revoke admin — decisión de producto: el único
   // admin va a ser el operador del SaaS (vos), seedeado vía env vars.
   // No tiene sentido habilitar UI para crear más admins desde la app.
+  const isCanceled = row.status === 'CANCELED'
   return [
     [
       {
@@ -239,14 +244,69 @@ function actionItems(row: any) {
       }
     ],
     [
-      {
-        label: 'Suspender cuenta',
-        icon: 'i-heroicons-pause-circle',
-        color: 'error' as const,
-        onSelect: () => console.log('suspend', row.id) // TODO P4.1: PATCH status
-      }
+      isCanceled
+        ? {
+            label: 'Reactivar cuenta',
+            icon: 'i-heroicons-play-circle',
+            color: 'success' as const,
+            onSelect: () => reactivate(row)
+          }
+        : {
+            label: 'Suspender cuenta',
+            icon: 'i-heroicons-pause-circle',
+            color: 'error' as const,
+            onSelect: () => suspend(row)
+          }
     ]
   ]
+}
+
+async function suspend(row: any) {
+  const ok = window.confirm(
+    `¿Suspender la cuenta de ${row.fullName}?\n\n` +
+    `Pasará a CANCELADA y entrará en modo solo lectura — no podrá crear ` +
+    `trabajos, fotos ni PDFs hasta reactivar.`
+  )
+  if (!ok) return
+  await patchStatus(row, 'CANCELED', 'Cuenta suspendida')
+}
+
+async function reactivate(row: any) {
+  const ok = window.confirm(
+    `¿Reactivar la cuenta de ${row.fullName}?\n\n` +
+    `Volverá a TRIAL. Si su trial anterior ya venció, se le resetea a ` +
+    `7 días desde ahora.`
+  )
+  if (!ok) return
+  await patchStatus(row, 'TRIAL', 'Cuenta reactivada')
+}
+
+async function patchStatus(row: any, newStatus: string, successMsg: string) {
+  if (pendingActionId.value === row.id) return
+  pendingActionId.value = row.id
+  try {
+    await fetchWithAuth(`/api/v1/admin/users/${row.id}`, {
+      method: 'PATCH',
+      body: { status: newStatus }
+    })
+    toast.add({
+      title: successMsg,
+      description: row.fullName,
+      icon: 'i-heroicons-check-circle',
+      color: 'success'
+    })
+    // Refresh ambos: la tabla y los KPIs del header.
+    await Promise.all([refreshUsers(), refreshGlobalMetrics()])
+  } catch (e: any) {
+    toast.add({
+      title: 'No pudimos actualizar la cuenta',
+      description: e?.data?.message || e?.message || 'Error desconocido',
+      icon: 'i-heroicons-exclamation-triangle',
+      color: 'error'
+    })
+  } finally {
+    pendingActionId.value = null
+  }
 }
 </script>
 
