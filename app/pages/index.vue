@@ -20,7 +20,8 @@
         label="MRR estimado"
         :value="overview?.mrr ?? null"
         prefix="$"
-        delta="pendiente de Stripe"
+        suffix=" MXN"
+        :delta="mrrDelta"
         trend="flat"
         :loading="metricsStatus === 'pending'"
       />
@@ -132,6 +133,14 @@ function pct(value: number | undefined | null): string {
   const p = (value / ov.totalTechnicians) * 100
   return `${p.toFixed(1)}% del total`
 }
+
+// Sublabel del MRR card: cuántas suscripciones activas hay detrás del número.
+const mrrDelta = computed(() => {
+  const ov = overview.value
+  if (!ov) return ''
+  if (ov.activeTechnicians === 0) return 'sin suscripciones activas'
+  return `${ov.activeTechnicians} ${ov.activeTechnicians === 1 ? 'suscripción' : 'suscripciones'} activas`
+})
 
 // ── Chart de registros ───────────────────────────────────────────────
 const registrationsDays = ref(14)

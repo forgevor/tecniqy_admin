@@ -1,11 +1,5 @@
 <template>
   <div class="space-y-4">
-    <TqAlert
-      variant="info"
-      title="Módulo parcial — pendiente de integración con Stripe"
-      message="Hoy mostramos los conteos por status del backend. MRR, ARR, churn, renovaciones próximas y cuentas en riesgo se van a llenar cuando integremos Stripe (post-deploy)."
-    />
-
     <!-- KPIs reales de suscripción por status -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-[14px]">
       <TqMetricCard
@@ -33,7 +27,8 @@
         label="MRR estimado"
         :value="overview?.mrr ?? null"
         prefix="$"
-        delta="pendiente de Stripe"
+        suffix=" MXN"
+        :delta="mrrDelta"
         trend="flat"
         :loading="metricsStatus === 'pending'"
       />
@@ -41,11 +36,30 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
       <TqCard title="Renovaciones próximas" subtitle="Próximos 7 días">
-        <TqEmptyState
-          icon="i-heroicons-calendar-days"
-          title="Aún no hay renovaciones"
-          description="Cuando integremos Stripe vas a ver acá las cuentas que renuevan en los próximos días, con monto y método de pago."
-        />
+        <div v-if="renewalsStatus === 'pending'" class="renewals-loading">
+          <div class="text-text-muted text-sm">Cargando…</div>
+        </div>
+        <div v-else-if="!renewals || renewals.length === 0">
+          <TqEmptyState
+            icon="i-heroicons-calendar-days"
+            title="Sin renovaciones esta semana"
+            description="Ningún técnico activo tiene su renovación dentro de los próximos 7 días."
+          />
+        </div>
+        <ul v-else class="renewals">
+          <li v-for="r in renewals" :key="r.id" class="renewal">
+            <div class="renewal__main">
+              <NuxtLink :to="`/users/${r.id}`" class="renewal__name">
+                {{ r.fullName }}
+              </NuxtLink>
+              <div class="renewal__email">{{ r.email }}</div>
+            </div>
+            <div class="renewal__meta">
+              <div class="renewal__when tnum">{{ relativeWhen(r.subscriptionExpiresAt) }}</div>
+              <div class="renewal__plan">{{ planLabel(r.plan, r.planId) }}</div>
+            </div>
+          </li>
+        </ul>
       </TqCard>
 
       <TqCard title="Cuentas en riesgo" subtitle="Pagos fallidos o por vencer">
@@ -82,6 +96,7 @@
 </template>
 
 <script setup lang="ts">
+const { fetchWithAuth } = useApi()
 const { overview, status: metricsStatus } = useAdminMetrics()
 
 // Mismo helper que users/dashboard — % del total de técnicos.
@@ -90,6 +105,55 @@ function pct(value: number | undefined | null): string {
   if (!ov || ov.totalTechnicians === 0 || value == null) return '—'
   const p = (value / ov.totalTechnicians) * 100
   return `${p.toFixed(1)}% del total`
+}
+
+const mrrDelta = computed(() => {
+  const ov = overview.value
+  if (!ov) return ''
+  if (ov.activeTechnicians === 0) return 'sin suscripciones activas'
+  return `${ov.activeTechnicians} ${ov.activeTechnicians === 1 ? 'suscripción' : 'suscripciones'} activas`
+})
+
+// ── Renovaciones próximas ─────────────────────────────────────────────
+interface RenewalRow {
+  id: string
+  email: string
+  fullName: string
+  subscriptionExpiresAt: string
+  planId: string | null
+  plan: 'TRIAL' | 'MONTHLY' | 'ANNUAL' | null
+}
+
+const { data: renewals, status: renewalsStatus } = useAsyncData<RenewalRow[] | null>(
+  'admin-renewals-7d',
+  () => fetchWithAuth<RenewalRow[]>('/api/v1/admin/metrics/renewals', {
+    params: { days: 7 }
+  }).catch(() => null)
+)
+
+const PLAN_LABEL: Record<string, string> = {
+  MONTHLY: 'Pro mensual',
+  ANNUAL: 'Pro anual',
+  TRIAL: 'Trial'
+}
+function planLabel(plan: string | null, planId: string | null): string {
+  if (plan && PLAN_LABEL[plan]) return PLAN_LABEL[plan]
+  if (planId === 'monthly') return 'Pro mensual'
+  if (planId === 'annual') return 'Pro anual'
+  return '—'
+}
+
+// "en 2 días", "mañana", "hoy", o fecha absoluta si está lejos.
+function relativeWhen(iso: string): string {
+  const target = new Date(iso).getTime()
+  const now = Date.now()
+  const diffMs = target - now
+  const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24))
+  if (diffDays === 0) return 'hoy'
+  if (diffDays === 1) return 'mañana'
+  if (diffDays < 0) return `hace ${-diffDays}d`
+  if (diffDays <= 7) return `en ${diffDays}d`
+  return new Date(iso).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' })
 }
 </script>
 
@@ -126,4 +190,42 @@ function pct(value: number | undefined | null): string {
   color: var(--primary); font-weight: 600; text-decoration: none;
 }
 .risk-summary__link:hover { text-decoration: underline; }
+
+/* Lista de renovaciones próximas */
+.renewals-loading {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 180px;
+}
+.renewals { list-style: none; padding: 0; margin: 0; }
+.renewal {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-soft);
+}
+.renewal:last-child { border-bottom: 0; }
+.renewal__main { flex: 1; min-width: 0; }
+.renewal__name {
+  font-size: 13px; font-weight: 700; color: var(--text);
+  text-decoration: none; display: block;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.renewal__name:hover { color: var(--primary); }
+.renewal__email {
+  font-size: 11px; color: var(--text-muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.renewal__meta {
+  display: flex; flex-direction: column; align-items: flex-end; gap: 2px;
+  flex-shrink: 0;
+}
+.renewal__when {
+  font-size: 12px; font-weight: 700; color: var(--text);
+}
+.renewal__plan {
+  font-size: 11px; font-weight: 600;
+  color: var(--primary);
+  padding: 2px 8px;
+  background: var(--primary-soft);
+  border-radius: 999px;
+}
 </style>

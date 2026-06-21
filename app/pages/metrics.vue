@@ -6,7 +6,8 @@
         label="MRR · este mes"
         :value="overview?.mrr ?? null"
         prefix="$"
-        delta="pendiente de Stripe"
+        suffix=" MXN"
+        :delta="mrrDelta"
         trend="flat"
         :loading="metricsStatus === 'pending'"
       />
@@ -18,16 +19,18 @@
         :loading="metricsStatus === 'pending'"
       />
       <TqMetricCard
-        label="Tasa de conversión"
-        value="—"
-        delta="trial → pago (post-Stripe)"
-        trend="flat"
+        label="Conversión · 30 días"
+        :value="conversionValue"
+        :delta="conversionDelta"
+        :trend="conversionTrend"
+        :loading="conversionStatus === 'pending'"
       />
       <TqMetricCard
-        label="LTV promedio"
-        value="—"
-        delta="post-Stripe"
-        trend="flat"
+        label="Nuevos últimos 30 días"
+        :value="overview?.newTechniciansLast30Days ?? null"
+        :delta="overview ? 'signups recientes' : ''"
+        :trend="overview && overview.newTechniciansLast30Days > 0 ? 'up' : 'flat'"
+        :loading="metricsStatus === 'pending'"
       />
     </div>
 
@@ -94,6 +97,49 @@
 <script setup lang="ts">
 const { fetchWithAuth } = useApi()
 const { overview, status: metricsStatus } = useAdminMetrics()
+
+// ── MRR + Conversión ─────────────────────────────────────────────────
+const mrrDelta = computed(() => {
+  const ov = overview.value
+  if (!ov) return ''
+  if (ov.activeTechnicians === 0) return 'sin suscripciones activas'
+  return `${ov.activeTechnicians} ${ov.activeTechnicians === 1 ? 'suscripción' : 'suscripciones'} activas`
+})
+
+interface ConversionDto {
+  days: number
+  trialSignups: number
+  conversions: number
+  ratePercent: number | null
+}
+
+const { data: conversion, status: conversionStatus } = useAsyncData<ConversionDto | null>(
+  'admin-conversion-30d',
+  () => fetchWithAuth<ConversionDto>('/api/v1/admin/metrics/conversion', {
+    params: { days: 30 }
+  }).catch(() => null)
+)
+
+const conversionValue = computed<string | null>(() => {
+  const c = conversion.value
+  if (!c || c.ratePercent == null) return null
+  return `${c.ratePercent.toFixed(1)}%`
+})
+
+const conversionDelta = computed(() => {
+  const c = conversion.value
+  if (!c) return ''
+  if (c.trialSignups === 0) return 'sin signups el periodo'
+  return `${c.conversions}/${c.trialSignups} (compras / signups)`
+})
+
+const conversionTrend = computed<'up' | 'flat' | 'down'>(() => {
+  const c = conversion.value
+  if (!c || c.ratePercent == null) return 'flat'
+  if (c.ratePercent >= 20) return 'up'    // target del PAYMENT_ROADMAP
+  if (c.ratePercent < 5) return 'down'
+  return 'flat'
+})
 
 // Distribución por ciudad
 const { data: cityRaw, status: cityStatus } = useAsyncData<Array<{ label: string, count: number }> | null>(

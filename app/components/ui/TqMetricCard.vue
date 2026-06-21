@@ -2,7 +2,7 @@
   <div class="tq-metric-card">
     <div class="tq-metric-card__label">{{ label }}</div>
     <div class="tq-metric-card__value tnum">
-      <span v-if="prefix" class="tq-metric-card__prefix">{{ prefix }}</span>{{ formattedValue }}
+      <span v-if="prefix" class="tq-metric-card__prefix">{{ prefix }}</span>{{ formattedValue }}<span v-if="suffix" class="tq-metric-card__suffix">{{ suffix }}</span>
     </div>
     <div v-if="delta || $slots.delta" class="tq-metric-card__delta" :class="deltaClass">
       <UIcon v-if="trend" :name="trendIcon" class="tq-metric-card__trend-icon" />
@@ -30,6 +30,7 @@ const props = withDefaults(defineProps<{
   label: string
   value: string | number | null | undefined
   prefix?: string
+  suffix?: string
   delta?: string
   trend?: Trend
   loading?: boolean
@@ -83,6 +84,10 @@ const deltaClass = computed(() => ({
 }
 .tq-metric-card__prefix {
   font-size: 22px; font-weight: 600; color: var(--text-muted);
+}
+.tq-metric-card__suffix {
+  font-size: 14px; font-weight: 600; color: var(--text-muted);
+  margin-left: 4px;
 }
 .tq-metric-card__delta {
   display: flex; align-items: center; gap: 4px;

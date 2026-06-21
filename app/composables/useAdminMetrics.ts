@@ -12,7 +12,9 @@
  *   - trialTechnicians          → status=TRIAL
  *   - overdueTechnicians        → status=OVERDUE
  *   - newTechniciansLast30Days  → registros últimos 30 días
- *   - mrr                       → null hasta integrar Stripe (mostrar '—')
+ *   - mrr                       → revenue mensual estimado en MXN
+ *                                 (ACTIVE & MONTHLY × 69 + ACTIVE & ANNUAL × 690/12).
+ *                                 null solo si Play Billing está deshabilitado.
  */
 export interface MetricsOverview {
   totalTechnicians: number
