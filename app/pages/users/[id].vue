@@ -158,6 +158,48 @@
         </TqCard>
       </div>
 
+      <!-- Historial de suscripción (Play Billing) -->
+      <TqCard
+        title="Historial de suscripción"
+        subtitle="Eventos de Play Billing del técnico (más reciente primero)"
+      >
+        <div v-if="subEventsStatus === 'pending'" class="sub-events-loading">
+          <div class="text-text-muted text-sm">Cargando…</div>
+        </div>
+        <div v-else-if="!subEvents || subEvents.length === 0">
+          <TqEmptyState
+            icon="i-heroicons-clock"
+            title="Sin eventos todavía"
+            :description="user.status === 'TRIAL'
+              ? 'El técnico está en trial — no ha completado compras ni recibido notificaciones de Play.'
+              : 'Aún no se registraron eventos de Play Billing para este técnico.'"
+          />
+        </div>
+        <ol v-else class="timeline">
+          <li v-for="(e, i) in subEvents" :key="e.id" class="timeline__item">
+            <div class="timeline__marker" :class="`timeline__marker--${eventTone(e.eventType)}`">
+              <UIcon :name="eventIcon(e.eventType)" />
+            </div>
+            <div class="timeline__body">
+              <div class="timeline__head">
+                <span class="timeline__label">{{ eventLabel(e.eventType) }}</span>
+                <span
+                  class="timeline__source"
+                  :class="e.messageId ? 'timeline__source--rtdn' : 'timeline__source--manual'"
+                  :title="e.messageId ? `messageId: ${e.messageId}` : 'Generado server-side desde /verify'"
+                >
+                  {{ e.messageId ? 'RTDN' : 'verify' }}
+                </span>
+              </div>
+              <div class="timeline__when" :title="new Date(e.occurredAt).toLocaleString('es-MX')">
+                {{ relativeWhen(e.occurredAt) }}
+              </div>
+            </div>
+            <div v-if="i < subEvents.length - 1" class="timeline__connector" />
+          </li>
+        </ol>
+      </TqCard>
+
       <!-- Tabs: Trabajos / Clientes -->
       <TqCard padding="none">
         <template #header>
@@ -448,6 +490,91 @@ async function saveContact() {
   }
 }
 
+// ── Historial de suscripción (Play Billing events) ──────────────────
+interface SubscriptionEventRow {
+  id: string
+  eventType: string
+  occurredAt: string
+  messageId: string | null
+}
+
+const { data: subEvents, status: subEventsStatus } = useAsyncData<SubscriptionEventRow[] | null>(
+  `admin-user-sub-events-${userId.value}`,
+  () => fetchWithAuth<SubscriptionEventRow[]>(
+    `/api/v1/admin/users/${userId.value}/subscription-events`,
+    { params: { limit: 30 } }
+  ).catch(() => null)
+)
+
+// Mapeo eventType → icon/tono/label. Mantiene la simbología consistente
+// con el resto del admin (verde=positivo, rojo=cancelación, amarillo=grace).
+const EVENT_ICON: Record<string, string> = {
+  PURCHASED:      'i-heroicons-shopping-cart',
+  RENEWED:        'i-heroicons-arrow-path',
+  RECOVERED:      'i-heroicons-arrow-uturn-up',
+  IN_GRACE:       'i-heroicons-exclamation-triangle',
+  ON_HOLD:        'i-heroicons-pause-circle',
+  PAUSED:         'i-heroicons-pause',
+  RESTARTED:      'i-heroicons-play-circle',
+  CANCELED:       'i-heroicons-x-circle',
+  EXPIRED:        'i-heroicons-clock',
+  REVOKED:        'i-heroicons-receipt-refund',
+  PRICE_CHANGE:   'i-heroicons-tag',
+  DEFERRED:       'i-heroicons-calendar',
+  PAUSE_SCHEDULE: 'i-heroicons-calendar-days',
+  OTHER:          'i-heroicons-information-circle'
+}
+
+const EVENT_TONE: Record<string, 'success' | 'warn' | 'error' | 'neutral'> = {
+  PURCHASED:    'success',
+  RENEWED:      'success',
+  RECOVERED:    'success',
+  RESTARTED:    'success',
+  IN_GRACE:     'warn',
+  ON_HOLD:      'warn',
+  PAUSED:       'warn',
+  PRICE_CHANGE: 'warn',
+  DEFERRED:     'warn',
+  CANCELED:     'error',
+  EXPIRED:      'error',
+  REVOKED:      'error'
+}
+
+const EVENT_LABEL: Record<string, string> = {
+  PURCHASED:      'Compra confirmada',
+  RENEWED:        'Renovación exitosa',
+  RECOVERED:      'Pago recuperado',
+  IN_GRACE:       'Pago fallido — en gracia',
+  ON_HOLD:        'En espera (on hold)',
+  PAUSED:         'Suscripción pausada',
+  RESTARTED:      'Suscripción reanudada',
+  CANCELED:       'Cancelación',
+  EXPIRED:        'Suscripción expirada',
+  REVOKED:        'Reembolsada / revocada',
+  PRICE_CHANGE:   'Cambio de precio confirmado',
+  DEFERRED:       'Renovación diferida',
+  PAUSE_SCHEDULE: 'Cambio de pausa programada',
+  OTHER:          'Evento desconocido'
+}
+
+const eventIcon  = (t: string) => EVENT_ICON[t]  || 'i-heroicons-information-circle'
+const eventTone  = (t: string) => EVENT_TONE[t]  || 'neutral'
+const eventLabel = (t: string) => EVENT_LABEL[t] || t
+
+function relativeWhen(iso: string): string {
+  const target = new Date(iso).getTime()
+  const now = Date.now()
+  const diffSec = Math.round((now - target) / 1000)
+  if (diffSec < 60) return 'hace un momento'
+  const diffMin = Math.round(diffSec / 60)
+  if (diffMin < 60) return `hace ${diffMin} min`
+  const diffH = Math.round(diffMin / 60)
+  if (diffH < 24) return `hace ${diffH} h`
+  const diffD = Math.round(diffH / 24)
+  if (diffD < 30) return `hace ${diffD} d`
+  return new Date(iso).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })
+}
+
 // ── Tabs Trabajos / Clientes ─────────────────────────────────────────
 const activeTab = ref<'jobs' | 'clients'>('jobs')
 
@@ -723,5 +850,79 @@ function formatDateTime(value: string | null | undefined): string {
   padding: 16px 24px;
   border-top: 1px solid var(--border);
   background: var(--surface-2);
+}
+
+/* ── Timeline de subscription events ──────────────────────────────── */
+.sub-events-loading {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 120px;
+}
+.timeline {
+  list-style: none;
+  margin: 0;
+  padding: 8px 0;
+}
+.timeline__item {
+  position: relative;
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 10px 0;
+}
+.timeline__marker {
+  flex-shrink: 0;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1;
+}
+.timeline__marker :deep(svg) { width: 16px; height: 16px; }
+.timeline__marker--success {
+  background: color-mix(in srgb, var(--status-done) 14%, transparent);
+  color: var(--status-done);
+}
+.timeline__marker--warn {
+  background: color-mix(in srgb, var(--status-pending) 18%, transparent);
+  color: var(--status-pending);
+}
+.timeline__marker--error {
+  background: color-mix(in srgb, var(--status-cancel) 14%, transparent);
+  color: var(--status-cancel);
+}
+.timeline__marker--neutral {
+  background: var(--surface-2);
+  color: var(--text-muted);
+}
+.timeline__body { flex: 1; min-width: 0; }
+.timeline__head {
+  display: flex; align-items: center; gap: 8px;
+}
+.timeline__label {
+  font-size: 13px; font-weight: 700; color: var(--text);
+}
+.timeline__source {
+  font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  padding: 2px 6px; border-radius: 4px;
+  cursor: help;
+}
+.timeline__source--rtdn {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+.timeline__source--manual {
+  background: var(--surface-2);
+  color: var(--text-muted);
+}
+.timeline__when {
+  font-size: 12px; color: var(--text-muted);
+  margin-top: 2px;
+}
+/* Línea vertical entre items */
+.timeline__connector {
+  position: absolute;
+  left: 16px;  /* center del marker de 32px */
+  top: 42px;
+  bottom: -10px;
+  width: 2px;
+  background: var(--border-soft);
 }
 </style>
