@@ -105,8 +105,12 @@
       </template>
 
       <template #mrr-cell="{ row }">
-        <span v-if="row.original.plan && row.original.plan !== 'TRIAL'" class="text-status-done font-bold tabular-nums">
-          ${{ row.original.plan === 'ANNUAL' ? '249' : '299' }}
+        <span
+          v-if="rowMrr(row.original) !== null"
+          class="text-status-done font-bold tabular-nums"
+          :title="mrrTooltip(row.original)"
+        >
+          ${{ rowMrr(row.original) }}
         </span>
         <span v-else class="text-text-subtle font-medium">—</span>
       </template>
@@ -184,6 +188,25 @@ const STATUS_LABEL: Record<string, string> = {
   TRIAL:    'Prueba',
   OVERDUE:  'Vencida',
   CANCELED: 'Cancelada'
+}
+
+// Contribución MRR por técnico, en MXN. Tiene que matchear con el
+// cálculo del backend (AdminMetricsService.PRICE_*) para que la suma
+// visual cuadre con la card "MRR estimado".
+//   MONTHLY ACTIVE → $69
+//   ANNUAL  ACTIVE → $58 (690/12 redondeado)
+//   El resto → null (no contribuye)
+function rowMrr(row: any): number | null {
+  if (row.status !== 'ACTIVE') return null
+  if (row.plan === 'MONTHLY') return 69
+  if (row.plan === 'ANNUAL')  return Math.round(690 / 12)
+  return null
+}
+
+function mrrTooltip(row: any): string {
+  if (row.plan === 'ANNUAL') return '$690 MXN/año — equivalente a $58/mes'
+  if (row.plan === 'MONTHLY') return '$69 MXN/mes'
+  return ''
 }
 
 // Cambio de rol resetea a página 1
