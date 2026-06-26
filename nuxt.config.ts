@@ -57,7 +57,10 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8080'
+      // Backend de producción por default. Para hitting un backend local
+      // durante desarrollo, exportar NUXT_PUBLIC_API_BASE=http://localhost:8080
+      // (o crear un .env con esa línea — gitignored).
+      apiBase: process.env.NUXT_PUBLIC_API_BASE || 'https://api.tecniqy.forgevor.com'
     }
   },
   future: {
